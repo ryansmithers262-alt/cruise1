@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F4E79">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cruise 6.5%">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<title>Cruise Control Calculator — Retirement Income &amp; Legacy Plan</title>
+<style>
+  :root{
+    --navy:#1F4E79; --bar:#2E75B6; --lightblue:#D9E6F2; --green:#E2EFDA;
+    --red:#C00000; --redtint:#FCE4D6; --ink:#1a1a1a; --muted:#595959; --paper:#FDFDFB;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+       font:15px/1.5 Arial,Helvetica,sans-serif;padding:24px 16px 64px}
+  .sheet{max-width:740px;margin:0 auto}
+  h1{font-size:22px;color:var(--navy);letter-spacing:.5px;margin:0 0 2px;text-align:center}
+  .subtitle{text-align:center;color:var(--muted);font-style:italic;font-size:13px;margin:0 0 20px}
+  .stepbar{background:var(--navy);color:#fff;font-weight:bold;font-size:14px;
+           letter-spacing:.4px;padding:6px 12px;margin:26px 0 12px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  label{display:block;font-weight:bold;font-size:13px;margin-bottom:3px}
+  .hint{font-weight:normal;color:var(--muted);font-size:12px;display:block}
+  input,select{width:100%;padding:8px 10px;font:inherit;border:1px solid #b7c4d6;border-radius:2px;background:#fff}
+  input:focus,select:focus{outline:2px solid var(--bar);outline-offset:1px}
+  .optional{background:#fbfbf8}
+  .math{background:var(--lightblue);border-left:4px solid var(--bar);
+        padding:10px 14px;margin:12px 0;font-size:13.5px}
+  .math b{white-space:nowrap}
+  .mono{font-family:Consolas,Menlo,monospace;font-size:13px}
+  .result{border:2px solid var(--navy);margin-top:14px}
+  .tier{padding:8px 14px;font-weight:bold;color:#fff;font-size:15px;letter-spacing:.3px}
+  .tier.draw{background:var(--bar)}.tier.bridge{background:#4a7c3f}
+  .tier.rmd{background:#7a5195}.tier.dormant{background:#8a8a8a}.tier.none{background:#8a8a8a}
+  .amount{padding:16px 14px 6px;font-size:15px}
+  .amount .big{font-size:30px;font-weight:bold;color:var(--navy);display:block;margin:4px 0 8px}
+  .notes{padding:0 14px 14px;font-size:13.5px}
+  .notes li{margin-bottom:6px}
+  .warn{background:var(--redtint);border-left:4px solid var(--red);padding:10px 14px;
+        margin:12px 0;font-size:13.5px;font-weight:bold;color:#7a0000}
+  .foot{margin-top:34px;border-top:1px solid var(--bar);padding-top:10px;
+        color:var(--muted);font-size:12px;font-style:italic;text-align:center}
+  details{margin:12px 0;border:1px solid #b7c4d6;background:#fbfbf8;padding:8px 12px}
+  summary{font-weight:bold;font-size:13px;color:var(--navy);cursor:pointer}
+  details .grid{margin-top:12px}
+  .btn{display:block;width:100%;margin:18px 0 4px;padding:12px;background:#1F4E79;color:#fff;
+       font:bold 16px Arial,Helvetica,sans-serif;letter-spacing:.5px;border:none;border-radius:2px;cursor:pointer}
+  .btn.small{font-size:13px;padding:8px;margin:10px 0 0;background:var(--bar)}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid #b7c4d6;margin-top:10px}
+  .split div{padding:8px 14px;font-size:13.5px}
+  .split div:first-child{border-right:1px solid #b7c4d6}
+  .split .lab{font-weight:bold;color:var(--muted);font-size:12px;display:block}
+  @media print{ input,select{border:none;border-bottom:1px solid #999} .stepbar{-webkit-print-color-adjust:exact;print-color-adjust:exact} details{border:none} details[open] summary{display:none} }
+
+  /* ===== app/mobile layer (added for the Android build; engine untouched) ===== */
+  @media (max-width:640px){
+    body{padding:12px 10px calc(48px + env(safe-area-inset-bottom))}
+    .sheet{max-width:100%}
+    table{font-size:13px}
+    h1{font-size:19px}
+  }
+  /* 16px prevents iOS/Android zoom-on-focus; 44px is the minimum tap target */
+  input,select,button{font-size:16px;min-height:44px}
+  input{width:100%;padding:10px;border:1px solid #b9c6d4;border-radius:8px}
+  label{display:block;margin-bottom:4px}
+  button{border-radius:10px;padding:12px 18px;touch-action:manipulation}
+  @media (display-mode:standalone){ .noapp{display:none} }
+</style>
+</head>
+<body>
+<noscript><div style="background:#FCE4D6;border:2px solid #C00000;color:#7a0000;font-weight:bold;padding:12px 14px;margin:0 0 16px;max-width:740px;margin-left:auto;margin-right:auto">This viewer is not running the calculator’s code, so nothing will compute. Open this file with a real browser instead: long-press the file → Open with → Chrome or Safari.</div></noscript>
+<div class="sheet">
+  <div id="jswarn" style="background:#FCE4D6;border:2px solid #C00000;color:#7a0000;padding:12px 14px;margin:0 0 18px;font-size:14px;line-height:1.5"><b>If you can read this box, this app is only previewing the file — the calculator cannot compute here.</b> Google Drive preview and most file previews show the page but strip out its code. To use the calculator:<br>1. Download the file to this device (in Drive: ⋮ menu on the file → <b>Download</b>).<br>2. Open the downloaded copy with a real browser: Files app → long-press the file → <b>Open with → Chrome</b> (or Safari on iPhone).<br>3. Or type this in Chrome’s address bar (typical Android download location):<br><span style="font-family:Consolas,Menlo,monospace;font-size:13px;word-break:break-all">file:///sdcard/Download/Cruise_Control_Calculator.html</span><br>On a computer, just double-click the file. Tip: once open in Chrome, bookmark it — one tap every November after that.</div>
+  <h1>CRUISE CONTROL CALCULATOR</h1>
+  <p class="subtitle">Companion to the Retirement Income &amp; Legacy Plan (Section 9 as amended, Aug 2026) and the Addendum.<br>
+  One rule for the whole span: before 59½ draw from taxable · from 59½ draw the rate × combined TSP, his account first · from 75 the RMD overrides.<br>
+  This tool computes — a human verifies the math and submits at tsp.gov.</p>
+
+  <div class="stepbar">STEP 1 — THE RULE (set once, then leave it alone)</div>
+  <div class="grid">
+    <div><label for="rate">Cruise rate, % <span class="hint"><b>6.5 — set it once and leave it.</b> Resolved Aug 2026 across all four of the household's own stress engines (Addendum Parts 3.9.5 and 3.10.1): 6.5 cuts income forced above the 24% top by ~40% vs 5.5 (historical $1.97M vs $3.24M; bootstrap $1.75M vs $3.02M; survivor run $1.27M vs $1.92M) AND spends more than 5.5 in every engine. 5.5 wins only on median estate and ~half a point of care-shock tail — the weaker side of this plan's ordering, since legacy is an output not a target. Against the SECTION 2 TIERS (not against 5.5), this rule spends ~$0.6M less in the base world: the tiers top up from taxable in lean years and this rule has no such lever. What that buys is a 4.5% failure rate instead of 14.7% in the worst modelled world with a care event. The rate does NOT depend on her retirement date; an earlier version of this tool said it did and had the direction backwards. Above 6.5 the curve turns over — do not go higher. NOT 3.5: that is the deep-floor crisis rate, and applying it permanently costs ~$1.15M of lifetime spending and re-arms the RMD bomb Section 4 exists to defuse</span></label>
+      <input id="rate" inputmode="decimal" placeholder="6.5"></div>
+    <div><label for="lid">Lid on the 24% bracket? <span class="hint"><b>OFF is the default at 6.5%</b> (Addendum 4.14). The lid binds in ZERO years while both are alive, and in survivor years it costs $1.47M of spending for $0.01M of bracket protection. The 24% room is still shown and a crossing still warns: MONITORED, not a cap. Turn it ON only if the rate drops below ~5%</span></label>
+      <select id="lid"><option value="0" selected>LID OFF — recommended at 6.5%</option><option value="1">LID ON — cap the draw at the 24% room</option></select></div>
+    <div><label for="status">Filing status <span class="hint">MFJ covers Married Filing Jointly and Qualifying Surviving Spouse (same brackets). The YEAR of a death still files MFJ. Once actually filing SINGLE, switch here and reload the figures — every MFJ number is wrong, and the 24% room roughly halves</span></label>
+      <select id="status"><option value="mfj">Married filing jointly / QSS</option><option value="single">Single</option></select></div>
+    <div><label for="loadbtnwrap">2026 starting figures <span class="hint">Fills the bracket table below with published 2026 values for the status chosen. VERIFY at irs.gov, and for any later year type that year's figures over the top</span></label>
+      <button id="loadbtn" class="btn small" type="button" style="margin:0">LOAD 2026 FIGURES (later years: type that year’s irs.gov figures — everything else self-indexes)</button></div>
+  </div>
+
+  <div class="stepbar">STEP 2 — ENTER THIS YEAR'S INPUTS (from irs.gov, ncdor.gov, tsp.gov, betterment.com)</div>
+  <div class="grid">
+    <div><label for="b24">24% bracket ceiling <span class="hint">Top of the 24% bracket, taxable income. 2026: 403550 MFJ / 201775 single. This is what the lid is built from</span></label>
+      <input id="b24" inputmode="decimal" placeholder="e.g. 403550"></div>
+    <div><label for="sd">Standard deduction — BASE amount <span class="hint">This year's base value for your filing status. 2026: 32200 MFJ / 16100 single. <b>Do NOT add the age-65 amounts here</b> — the next field does that automatically from the ages you enter (fixed 24 Aug 2026: the tool used to ignore them entirely, overstating federal tax ~$1,056/yr from his 65th birthday)</span></label>
+      <input id="sd" inputmode="decimal" placeholder="e.g. 32200"></div>
+    <div><label for="sd65">Additional standard deduction, per condition <span class="hint">26 USC 63(f). 2026: 1650 MFJ per condition / 2050 unmarried. Counted once per spouse aged 65+, and again per spouse who is blind. The age count is taken from the two ages above — enter blindness below</span></label>
+      <input id="sd65" inputmode="decimal" placeholder="e.g. 1650"></div>
+    <div><label for="sd_extra">Blind spouses (0, 1 or 2) <span class="hint">Extra standard-deduction conditions BEYOND age 65. Leave 0 unless a spouse is legally blind</span></label>
+      <input id="sd_extra" inputmode="decimal" placeholder="0" class="optional"></div>
+    <div><label for="myage">HIS age this year <span class="hint">Under 59.5 puts the tool in bridge mode (taxable only). 75 and over triggers the per-plan RMD check. Enter every year — it also drives the ARVA gauge</span></label>
+      <input id="myage" inputmode="decimal" placeholder="e.g. 62"></div>
+    <div><label for="heragey">HER age this year <span class="hint">Blank = same as his. Only matters from 75: each TSP pays its own RMD off its own owner's age, and hers distributes whether or not the rule sourced anything from it</span></label>
+      <input id="heragey" inputmode="decimal" placeholder="blank = same" class="optional"></div>
+    <div><label for="his_tsp">HIS TSP balance <span class="hint">tsp.gov. This is the NC-DEDUCTIBLE account (NCDOR FAQ A12) and the one the rule drains first. Expect it to reach zero around age 71–74 — that is the design, not a failure</span></label>
+      <input id="his_tsp" inputmode="decimal" placeholder="0"></div>
+    <div><label for="her_tsp">HER TSP balance <span class="hint">tsp.gov. Never NC-deductible. The household's perpetual engine — the deep-floor endgame means it never reaches zero</span></label>
+      <input id="her_tsp" inputmode="decimal" placeholder="0"></div>
+    <div><label for="his_tsp_py">HIS TSP balance on 31 DEC LAST YEAR <span class="hint"><b>This, not today's balance, is what the RMD divides.</b> From the December statement. Blank falls back to today's figure and the tool warns — in a 10% market year that fallback is wrong by thousands (fixed 24 Aug 2026)</span></label>
+      <input id="his_tsp_py" inputmode="decimal" placeholder="blank = today's balance" class="optional"></div>
+    <div><label for="her_tsp_py">HER TSP balance on 31 DEC LAST YEAR <span class="hint">Same. Only used from 75; harmless to fill in early</span></label>
+      <input id="her_tsp_py" inputmode="decimal" placeholder="blank = today's balance" class="optional"></div>
+    <div><label for="taxable">Taxable (Betterment) <span class="hint">Both accounts combined. The bridge source before 59.5, and the top-up / care / prosperity buffer after</span></label>
+      <input id="taxable" inputmode="decimal" placeholder="0"></div>
+    <div><label for="roth">Roth IRAs <span class="hint">Both. Last touched, inherited tax-free — for the ARVA gauge and the portfolio total</span></label>
+      <input id="roth" inputmode="decimal" placeholder="0" class="optional"></div>
+    <div><label for="ira">Traditional IRAs <span class="hint">Both. The QCD pipeline from 70½ — charity only. From 75 these carry their own aggregate RMD</span></label>
+      <input id="ira" inputmode="decimal" placeholder="0" class="optional"></div>
+    <div><label for="pen">Pensions this year <span class="hint"><b>PENSIONS ONLY</b> — military after the October COLA, plus her FERS once it begins. Survivor year: SBP + surviving FERS (SBP counts; DIC and VA disability NEVER do). Use 1099-R TAXABLE amounts — gross minus the SBP premium. <b>W-2 WAGES NO LONGER GO HERE</b> — there is a separate field below (changed 24 Aug 2026; re-enter both)</span></label>
+      <input id="pen" inputmode="decimal" placeholder="0"></div>
+    <div><label for="va">VA disability / DIC (annual) <span class="hint">TAX-FREE — excluded federally (38 USC 5301), by NC, and from IRMAA MAGI, so it never touches the bracket maths. It DOES count toward the needs tests: it is spendable, COLA'd and for life. Added 27 Aug 2026 (fix 10); before that there was nowhere to record it and the dormancy test understated guaranteed income by the whole amount</span></label><input id="va" value="0" inputmode="decimal" enterkeyhint="next"></div>
+    <div><label for="wages">Her W-2 wages this year <span class="hint">Federally taxable, NC-taxable, and it consumes 24% room — all three were missing before 24 Aug 2026, when this field only flipped the bridge clause dormant. While she is working the bridge clause SHOULD be dormant: selling taxable then realizes gains for no reason</span></label>
+      <input id="wages" inputmode="decimal" placeholder="0" class="optional"></div>
+    <div><label for="fers">…of which is NC-taxable and NOT withheld at OPM <span class="hint">Her FERS only, and only if she is NOT Bailey-vested AND the NC withholding election at OPM is NOT active. <b>Military pension and SBP are always 0 here</b> — G.S. 105-153.5(b)(5a) deducts Armed Forces retirement pay for 20+ years of service or medical retirement, and SBP paid to that member's beneficiary, with no vesting-date test; G.S. 105-153.5(b)(5) is the separate Bailey exclusion. Either one is enough on its own, and the same dollars cannot use both. If OPM withholding IS active, enter 0 — it is taxed at the source</span></label>
+      <input id="fers" inputmode="decimal" placeholder="0" class="optional"></div>
+    <div><label for="ss">Taxable Social Security <span class="hint">0 until claiming. Once claiming: 85% of combined benefits. This is the biggest single squeeze on the 24% room — it removes ~$70K at the 70/70 handoff</span></label>
+      <input id="ss" inputmode="decimal" placeholder="0" class="optional"></div>
+    <div><label for="ord">Other ordinary income <span class="hint">YTD non-qualified dividends + taxable interest (dashboards, Jan–Oct) + last year’s Q4 + short-term gains. Round UP; 1040 lines 3b−3a and 2b are the sanity floor</span></label>
+      <input id="ord" inputmode="decimal" placeholder="0" class="optional"></div>
+    <div><label for="qdiv">Qualified dividends + LT gains <span class="hint">Preferential-rate income. Does NOT consume the 24% room, but DOES count for NIIT and IRMAA. Include any realized gains from taxable sales</span></label>
+      <input id="qdiv" inputmode="decimal" placeholder="0" class="optional"></div>
+    <div><label for="iraRMD">Traditional-IRA RMD after QCDs <span class="hint">From 75 only. The portion NOT sent to charity — QCD dollars are excluded from income entirely and never touch this. IRAs aggregate: the combined IRA RMD can come from either one</span></label>
+      <input id="iraRMD" inputmode="decimal" placeholder="0" class="optional"></div>
+    <div><label for="prosp">Prosperity trigger, × the 24% top <span class="hint">Plan says 30; Addendum 4.15 proposes <b>20</b> under the 6.5% rule and names the cost — 30× fires ZERO times in every deterministic disaster, 20× fires 4–10 and moves very-bad-world failure 5.12%→6.55%. Needs the fee-only reviewer, so <b>the default here is the document's 30</b> — the plan's own rule is that the document wins when a tool disagrees with it (this tool shipped 20 until 24 Aug 2026). Boost is 25–50% of the same bracket top; 50% is the measured optimum</span></label>
+      <input id="prosp" inputmode="decimal" placeholder="30" class="optional"></div>
+    <div><label for="nc">NC flat tax rate, % <span class="hint">From ncdor.gov. Enter as a percent — 3.99 for 2026</span></label>
+      <input id="nc" inputmode="decimal" placeholder="e.g. 3.99" class="optional"></div>
+    <div><label for="nc_sd">NC standard deduction <span class="hint">From ncdor.gov: 25500 MFJ / 12750 single. Subtracted from the NC base before the flat rate — the tool omitted it entirely until 24 Aug 2026, overstating the January bill by roughly $1,000 a year. Blank uses the figure for the filing status chosen</span></label>
+      <input id="nc_sd" inputmode="decimal" placeholder="blank = 25500 MFJ / 12750 single" class="optional"></div>
+  </div>
+
+  <details><summary>BRIDGE INPUTS — only used before age 59½</summary>
+  <div class="grid">
+    <div><label for="need">NON-DISCRETIONARY floor (annual) <span class="hint"><b>$35,000</b> — measured Aug 2026 from actual outlays ($2,737.68/mo including a peak NC August with two EVs charging, plus ~$2K/yr of lumpy items like car maintenance). This is the NEEDS number: the test of whether guaranteed income covers the household regardless of markets. It is NOT the spending target — see below</span></label>
+      <input id="need" inputmode="decimal" placeholder="0" class="optional"></div>
+    <div><label for="lifestyle">Lifestyle target (annual, optional) <span class="hint">$105,000 — total outlay including discretionary. Shown for context only; no rule keys to it. The withdrawal rule sets spending by the TSP balance, and the guaranteed floor covers needs independent of both</span></label>
+      <input id="lifestyle" inputmode="decimal" placeholder="105000" class="optional"></div>
+    <div><label for="gainfrac">Realized gain per dollar sold, % <span class="hint">Betterment TaxMin sells high-basis and loss lots first, so a small sale realizes far less gain than the account's average embedded gain. 25 is a reasonable default; check the Betterment dashboard's estimated gain figure</span></label>
+      <input id="gainfrac" inputmode="decimal" placeholder="25" class="optional"></div>
+  </div></details>
+
+  <details><summary>ADVANCED — bracket table, withholding, NIIT, IRMAA (defaults are fine most years)</summary>
+  <div class="grid">
+    <div><label for="t10">10% bracket top</label><input id="t10" inputmode="decimal" class="optional"></div>
+    <div><label for="t12">12% bracket top</label><input id="t12" inputmode="decimal" class="optional"></div>
+    <div><label for="b22">22% bracket top</label><input id="b22" inputmode="decimal" class="optional"></div>
+    <div><label for="t32">32% bracket top</label><input id="t32" inputmode="decimal" class="optional"></div>
+    <div><label for="t35">35% bracket top</label><input id="t35" inputmode="decimal" class="optional"></div>
+    <div><label for="cg0">0% capital-gains top</label><input id="cg0" inputmode="decimal" class="optional"></div>
+    <div><label for="cg15">15% capital-gains top</label><input id="cg15" inputmode="decimal" class="optional"></div>
+    <div><label for="wover">Override the draw <span class="hint">Blank = the rule's amount. Use for a deliberate splurge year — and label it as one in that year's notes</span></label><input id="wover" inputmode="decimal" placeholder="blank = rule amount" class="optional"></div>
+    <div><label for="whpen">Federal tax already withheld YTD <span class="hint">DFAS myPay + W-2 + OPM</span></label><input id="whpen" inputmode="decimal" placeholder="0" class="optional"></div>
+    <div><label for="estpay">Federal estimated payments made <span class="hint">Usually 0 — the December election replaces them</span></label><input id="estpay" inputmode="decimal" placeholder="0" class="optional"></div>
+    <div><label for="prioryr">Last year's 1040 line 24 <span class="hint">Total tax. Displays the 90%/110% safe harbor</span></label><input id="prioryr" inputmode="decimal" placeholder="optional" class="optional"></div>
+    <div><label for="adj">Above-the-line adjustments <span class="hint">Deductible IRA, HSA, etc.</span></label><input id="adj" inputmode="decimal" placeholder="0" class="optional"></div>
+    <div><label for="ordinv">Investment share of other ordinary income <span class="hint">NIIT only. Blank = all of it</span></label><input id="ordinv" inputmode="decimal" placeholder="blank = all" class="optional"></div>
+    <div><label for="exempt">Tax-exempt interest (1040 line 2a) <span class="hint">Skips bracket math but COUNTS for IRMAA</span></label><input id="exempt" inputmode="decimal" placeholder="0" class="optional"></div>
+    <div><label for="taxadj">Manual adjustment to total federal tax <span class="hint">Credits, AMT, or the CPA's figure</span></label><input id="taxadj" inputmode="decimal" placeholder="0" class="optional"></div>
+  </div></details>
+
+  <button id="calcbtn" type="button" class="btn">CALCULATE</button>
+  <p style="text-align:center;color:#595959;font-size:12px;font-style:italic;margin:4px 0 0">Results update as you type — the button is just a nudge.</p>
+
+  <div class="stepbar">STEP 3 — THE MATH, SHOWN (verify against the Addendum, Parts 3.5–3.7)</div>
+  <div id="mathbox" class="math">Enter the figures above and press CALCULATE.</div>
+  <div id="warnings"></div>
+  <div class="result">
+    <div id="tierbar" class="tier none">—</div>
+    <div id="amountbox" class="amount"></div>
+    <div id="splitbox"></div>
+    <ul id="notesbox" class="notes"></ul>
+  </div>
+
+  <div class="stepbar">STEP 4 — FEDERAL WITHHOLDING ELECTION, AND NORTH CAROLINA</div>
+  <div id="whmath" class="math">Press CALCULATE.</div>
+  <div id="whwarnings"></div>
+  <div class="result">
+    <div id="whbar" class="tier none">—</div>
+    <div id="whamount" class="amount"></div>
+    <ul id="whnotes" class="notes"></ul>
+  </div>
+
+  <p class="foot">Cruise Control Calculator — companion to the Retirement Income &amp; Legacy Plan.<br>
+  This tool implements the document; if the two ever disagree, <b>the document wins</b> and the tool gets fixed or discarded.<br>
+  Verified against <span class="mono">cruise_calculator.py</span> — same arithmetic, same rounding, same self-test battery.<br>
+  Submit at tsp.gov by mid-November. A human clicks submit.</p>
+</div>
+
+<script>
+/* ==== BEGIN PURE ENGINE (kept DOM-free so the Python twin can be diffed against it) ==== */
+/* v7 — 27 Aug 2026 audit. Eleven defects repaired; see the AMENDMENT LOG at the top
+   of cruise_calculator.py, which this file mirrors exactly (parity_check.py proves it).
+   v7 adds: fix 10, a VA disability / DIC input — tax-free everywhere, but it COUNTS
+   toward the needs tests, which previously understated guaranteed income by the whole
+   amount; and fix 11, the needs guard, which went degenerate and fired unconditionally
+   once the pension exceeded the need.
+   v6 — 24 Aug 2026 audit. Nine defects repaired; see the AMENDMENT LOG at the top
+   of cruise_calculator.py. This file and that one must stay identical in behaviour;
+   parity_check.py is the proof. */
+var FIGURES = {
+  mfj:    {t10:24800, t12:100800, b22:211400, b24:403550, t32:512450, t35:768700,
+           sd:32200, sd65:1650, cg0:98900, cg15:613700},
+  single: {t10:12400, t12:50400,  b22:105700, b24:201775, t32:256225, t35:640600,
+           sd:16100, sd65:2050, cg0:49450, cg15:545500}
+};
+var NIIT_THRESH = {mfj:250000, single:200000};
+var NC_SD       = {mfj:25500,  single:12750};   /* NC standard deduction, ncdor.gov */
+var ULT = {75:24.6,76:23.7,77:22.9,78:22.0,79:21.1,80:20.2,81:19.4,82:18.5,83:17.7,84:16.8,
+           85:16.0,86:15.2,87:14.4,88:13.7,89:12.9,90:12.2,91:11.5,92:10.8,93:10.1,94:9.5,
+           95:8.9,96:8.4,97:7.8,98:7.3,99:6.8,100:6.4,101:6.0,102:5.6,103:5.2,104:4.9,105:4.6};
+var RATES = [0.10,0.12,0.22,0.24,0.32,0.35,0.37];
+
+function bracketTax(ti, cuts){
+  var prev=0, tax=0;
+  for(var i=0;i<cuts.length;i++){
+    if(ti>cuts[i]){ tax += (cuts[i]-prev)*RATES[i]; prev=cuts[i]; }
+    else { return tax + (ti-prev)*RATES[i]; }
+  }
+  return tax + (ti-prev)*RATES[6];
+}
+function marginalRate(ti, cuts){
+  for(var i=0;i<cuts.length;i++){ if(ti<=cuts[i]) return RATES[i]; }
+  return RATES[6];
+}
+/* FIX 6: the table starts at 75. Below that there is no divisor, and callers must
+   say "no RMD yet" rather than printing undefined or throwing. */
+function ultDiv(a){ var k=Math.min(Math.floor(a),105); return ULT.hasOwnProperty(k) ? ULT[k] : null; }
+
+function computeCruise(p){
+  /* FIX 9: hand back a COPY, never the shared FIGURES object. */
+  var src = p.year_figs || FIGURES[p.status], f = {};
+  for(var fk in src){ if(src.hasOwnProperty(fk)) f[fk] = src[fk]; }
+  var out = {notes:[], warnings:[], figs:f};
+  var b22=f.b22, b24=f.b24;
+  var pen=p.pen, ss=p.ss, ordi=p.ord_inc, wages=(p.wages||0), rate=p.rate/100;
+  var his=p.his_tsp, hers=p.her_tsp, tsp=his+hers;
+  var age=p.myage, herage=(p.heragey===null||p.heragey===undefined)?age:p.heragey;
+  var comb = tsp + p.taxable + p.roth + p.ira;
+  out.tsp=tsp; out.comb=comb; out.herage=herage;
+
+  /* FIX 3: 26 USC 63(f) — one extra standard-deduction amount per spouse aged 65+
+     and one more per spouse who is blind. `sd` in FIGURES is the BASE only. */
+  var n65 = (age>=65?1:0) + ((p.status==="mfj") ? (herage>=65?1:0) : 0);
+  var sd_count = n65 + (p.sd_extra||0);
+  var sd = f.sd + (f.sd65||0)*sd_count;
+  out.sd_eff=sd; out.sd_count=sd_count; out.sd_base=f.sd;
+
+  var rmd_ira = (age>=75) ? p.iraRMD : 0;
+
+  /* FIX 2 + FIX 4: the room must net EVERY non-TSP ordinary dollar, or the lid
+     permits an overshoot equal to whatever was left out (iraRMD, wages, adj). */
+  var room = b24 + sd - pen - wages - ss - ordi - rmd_ira + p.adj;
+  out.room = room;
+
+  var bridge = age < 59.5;
+  out.bridge = bridge;
+  var sale=0, W_rule=0, his_draw=0, hers_draw=0;
+  var rmd_his=0, rmd_hers=0, forced=0, rmd_in_draw=0;
+
+  if(bridge){
+    out.phase = "BRIDGE (before 59.5) — taxable account only";
+    var target = rate * p.taxable;
+    var va = +(p.va||0);
+    var guaranteed = pen + va;                 /* FIX 10: tax-free income counts here */
+    var covered = wages>0 && (wages+guaranteed)>=p.need;
+    out.dormant = covered;
+    if(covered){
+      target = 0;
+      out.notes.push("BRIDGE CLAUSE DORMANT: her salary plus the pension and VA already cover the need, so the surplus flows INTO taxable. Draw nothing. Selling here would realize gains for no reason (Addendum Part 3.6.1 — verified present).");
+    } else {
+      out.notes.push("Bridge sale of $"+Math.round(target).toLocaleString()+"; at "+p.gainfrac+"% realized gain that is $"+Math.round(target*p.gainfrac/100).toLocaleString()+" of long-term gain. With ordinary income this low there is usually 0%-bracket room to absorb it — check the 0% line in Step 4.");
+      /* FIX 11: the 3x test is only meaningful while the need is UNCOVERED. */
+      var uncovered = p.need - guaranteed;
+      if(uncovered > 0){
+        if(target > 3*uncovered){
+          out.notes.push("This hands over far more than the stated need. The rule permits it; the household does not have to take it. Dividends alone may be enough.");
+        }
+      } else {
+        out.notes.push("GUARANTEED INCOME ALREADY COVERS THE NEED: pension $"+Math.round(pen).toLocaleString()
+          + (va ? " + VA $"+Math.round(va).toLocaleString() : "")
+          + " = $"+Math.round(guaranteed).toLocaleString()+" against a $"+Math.round(p.need).toLocaleString()
+          + " floor ("+(guaranteed/p.need).toFixed(1)+"x). This entire $"+Math.round(target).toLocaleString()
+          + " draw is DISCRETIONARY — nothing forces the sale, and it realizes gain. Take it only if it is wanted.");
+      }
+    }
+    out.guaranteed = guaranteed;
+    out.need_cover = p.need ? (guaranteed/p.need) : 0;
+    W_rule = target; sale = target;
+  } else {
+    out.phase = "DRAW (59.5 onward) — combined TSP, his first";
+    out.dormant = false;
+    var _va = +(p.va||0);
+    out.guaranteed = pen + _va;
+    out.need_cover = p.need ? ((pen+_va)/p.need) : 0;
+    var t2 = rate * tsp;
+    out.target_raw = t2;
+    if(p.lid){
+      if(room < t2){
+        out.notes.push("LID BINDING: the rule wanted $"+Math.round(t2).toLocaleString()+" but only $"+Math.round(Math.max(0,room)).toLocaleString()+" of 24% room remains. Capped. This is the clause that keeps the Primary Objective's promise (Addendum Part 3.7).");
+      }
+      t2 = Math.min(t2, Math.max(0, room));
+    } else if(room < t2){
+      out.warnings.push("NO LID and the draw exceeds the 24% room by $"+Math.round(t2-room).toLocaleString()+". That much income is taxed at 32% plus possible IRMAA. The objective says never VOLUNTARILY exceed 24% — this is voluntary. Turn the lid on, or record this as a deliberate splurge.");
+    }
+    W_rule = t2;
+
+    /* FIX 7: RMDs come off the PRIOR 31 DECEMBER balance, and must be known
+       BEFORE sourcing so the lid can reserve room for hers (fix 1). */
+    var basePy = function(v, cur){ return (v===null||v===undefined) ? cur : v; };
+    var base_his  = basePy(p.his_tsp_py, his);
+    var base_hers = basePy(p.her_tsp_py, hers);
+    if(age>=75 && ((p.his_tsp_py===null||p.his_tsp_py===undefined) || (p.her_tsp_py===null||p.her_tsp_py===undefined))){
+      out.warnings.push("RMD BASE IS TODAY'S BALANCE, NOT LAST 31 DECEMBER'S. The statute uses the prior year-end balance. Enter the 31 December TSP balances from the December statements; a 10% market year makes the printed RMD wrong by thousands.");
+    }
+    rmd_his  = (age>=75    && his>0)  ? Math.min(base_his/ULT[Math.min(age,105)], his)      : 0;
+    rmd_hers = (herage>=75 && hers>0) ? Math.min(base_hers/ULT[Math.min(herage,105)], hers) : 0;
+
+    /* FIX 1: with the LID ON, her per-plan RMD is RESERVED INSIDE the cap before
+       anything is sourced from his account. Her TSP distributes that money whether
+       or not the rule asks for it, so taking it from his account first does not
+       avoid her distribution — it stacks hers on top and breaks the very ceiling
+       the lid exists to defend. With the lid OFF, sourcing is unchanged: his
+       account first, preserving the NC A12 deduction (FAQ A12). */
+    var reserved = (p.lid && rmd_hers>0) ? Math.min(W_rule, rmd_hers) : 0;
+    hers_draw = reserved;
+    his_draw  = Math.min(W_rule - reserved, his);
+    var spill = W_rule - reserved - his_draw;
+    hers_draw += spill;
+    if(reserved > 0){
+      out.notes.push("LID RESERVATION: $"+Math.round(reserved).toLocaleString()+" of the capped draw is taken from HER TSP first to satisfy her own per-plan RMD inside the cap. Sourcing it from his account instead would not stop her distribution — it would stack on top and break the ceiling. The cost is the NC A12 deduction on that slice; the benefit is that the lid holds.");
+    }
+    if(his <= 0){
+      out.notes.push("HIS TSP IS EMPTY — expected, by design, around age 71–74. Draws continue from hers with no decision and no ceremony. The NC A12 deduction is now permanently zero and the NC bill rises accordingly; that is not an error.");
+    } else if(spill > 0){
+      out.notes.push("His TSP is exhausted by this draw ($"+Math.round(his_draw).toLocaleString()+" from his, $"+Math.round(hers_draw).toLocaleString()+" from hers). Two separate requests at tsp.gov this year.");
+    }
+
+    var eh = Math.max(0, rmd_his - his_draw);
+    var ew = Math.max(0, rmd_hers - hers_draw);
+    his_draw += eh; hers_draw += ew; forced = eh + ew;
+    rmd_in_draw = Math.min(his_draw, rmd_his) + Math.min(hers_draw, rmd_hers);
+    if(forced > 0){
+      out.notes.push("RMD OVERRIDE: the law's minimum beats the rule this year. Forced excess of $"+Math.round(forced).toLocaleString()+" above the rule amount is REINVESTED in taxable — it is not spending and it is exempt from the 5% guardrail (main doc, Operating Rules From 75).");
+    }
+    if(age>=75 && rmd_hers>0 && hers_draw>0 && his>0){
+      out.notes.push("FROM 75, HIS-FIRST IS NO LONGER ABSOLUTE: her TSP must pay its OWN RMD every year ($"+Math.round(rmd_hers).toLocaleString()+") even though his account could have covered the whole rule amount. Per-plan, no cross-crediting. Expect two tsp.gov requests a year from here on, and expect the NC A12 deduction to cover only his slice.");
+    }
+    if(age>=75){
+      out.notes.push("Per-plan satisfaction: EACH TSP pays its own RMD (no cross-crediting). IRAs aggregate and QCDs offset them dollar-for-dollar. TSP auto-distributes any unmet remainder in December; keep Fidelity's automatic-RMD service ON for both IRAs.");
+    }
+    W_rule = his_draw + hers_draw;
+  }
+  out.W_rule=W_rule; out.his_draw=his_draw; out.hers_draw=hers_draw; out.sale=sale;
+  out.rmd_his=rmd_his; out.rmd_hers=rmd_hers; out.rmd_ira=rmd_ira;
+  out.forced=forced; out.rmd_in_draw=rmd_in_draw;
+
+  var W = (p.wover===null||p.wover===undefined) ? W_rule : p.wover;
+  out.W = W;
+  var cuts = [f.t10, f.t12, b22, b24, f.t32, f.t35];
+  var gain = bridge ? sale*p.gainfrac/100 : 0;
+  var qdiv = p.qdiv + gain, adj = p.adj;
+  out.bridge_gain = gain;
+
+  var tsp_income = bridge ? 0 : W;
+  var ord_all = pen + wages + ss + ordi + tsp_income + rmd_ira;   /* FIX 4 */
+  var agi = ord_all + qdiv - adj;
+  var tot_ti = Math.max(0, agi - sd);
+  var ord_ti = Math.max(0, ord_all - adj - sd);
+  var qd_ti = Math.max(0, tot_ti - ord_ti);
+
+  var tax_ord = bracketTax(ord_ti, cuts);
+  var at0  = Math.min(qd_ti, Math.max(0, f.cg0 - ord_ti));
+  var at20 = Math.min(qd_ti - at0, Math.max(0, tot_ti - f.cg15));
+  var at15 = Math.max(0, qd_ti - at0 - at20);
+  var tax_cg = 0.15*at15 + 0.20*at20;
+
+  var nii = qdiv + ((p.ordinv===null||p.ordinv===undefined) ? ordi : p.ordinv);
+  var niit = 0.038 * Math.min(nii, Math.max(0, agi - NIIT_THRESH[p.status]));
+
+  var liab = tax_ord + tax_cg + niit + p.taxadj;
+  var paid = p.whpen + p.estpay;
+  var owed = liab - paid;
+
+  var nonrmd = Math.max(0, W - Math.min(W, rmd_in_draw));
+  var raw_pct = W>0 ? 100*owed/W : 0;
+  var floor_pct = W>0 ? 100*0.20*nonrmd/W : 0;
+  var elect = Math.max(Math.round(Math.max(0, raw_pct)), Math.ceil(floor_pct));
+  var capped = elect > 99;
+  elect = Math.min(elect, 99);
+  var withheld = elect/100*W;
+  var settle = paid + withheld - liab;
+
+  out.ord_all=ord_all; out.agi=agi; out.taxable_inc=tot_ti; out.ord_ti=ord_ti; out.qd_ti=qd_ti;
+  out.tax_ord=tax_ord; out.at0=at0; out.at15=at15; out.at20=at20; out.tax_cg=tax_cg;
+  out.nii=nii; out.niit=niit; out.liability=liab; out.paid=paid; out.owed=owed;
+  out.raw_pct=raw_pct; out.floor_pct=floor_pct; out.elect=elect; out.capped=capped;
+  out.withheld=withheld; out.settle=settle; out.qdiv_all=qdiv;
+  out.marginal=marginalRate(ord_ti, cuts); out.over_ceiling=ord_ti - b24;
+  out.irmaa_magi=agi + p.exempt;
+
+  if(bridge && W>0){
+    out.notes.push("Bridge draws are SALES, not distributions — no 20% withholding floor, no 1099-R. Only the realized gain is taxed. Elect nothing at TSP; cover any federal tax with a Q4 estimated payment or by raising DFAS withholding.");
+  }
+  if(capped){
+    out.warnings.push("Withdrawal too small for the whole bill even at 99% — raise the draw, raise DFAS/OPM withholding, or Q4 estimated payment (ask the CPA).");
+  }
+  if(settle < -1000){
+    /* FIX 9: 99 is the ceiling; never print "elect 100%". */
+    out.warnings.push("~$"+Math.round(-settle).toLocaleString()+" still owed at filing (> $1,000) — elect "+Math.min(99, elect+1)+"% or withhold the exact dollar figure, unless safe harbor covers you.");
+  }
+  if(out.over_ceiling > 0){
+    out.warnings.push("ORDINARY INCOME IS $"+Math.round(out.over_ceiling).toLocaleString()+" OVER THE 24% TOP. If the lid is on, this is RMD-forced and unavoidable — the widow tax the plan already documents. If the lid is off, it was voluntary and the objective says not to.");
+  }
+  if(p.prioryr!==null && p.prioryr!==undefined){
+    var reqd = Math.min(0.90*liab, 1.10*p.prioryr);
+    out.safe_harbor = [reqd, W>0 ? Math.max(0, 100*(reqd-paid)/W) : 0];
+  }
+  if(age!==null && age<100){
+    out.arva = comb*0.03/(1 - Math.pow(1.03, -(100-age)));
+  }
+  var pb24 = (p.status==="single") ? 2*b24 : b24;
+  var trig = p.prosp_mult * pb24;
+  out.prosp_trigger = trig;
+  if(comb >= trig){ out.prosp_lo = 0.25*pb24; out.prosp_hi = 0.50*pb24;
+    out.notes.push("PROSPERITY OPTION CLEARED: portfolio $"+Math.round(comb).toLocaleString()+" \u2265 "+p.prosp_mult+"x the 24% top ($"+Math.round(trig).toLocaleString()+"). A ONE-OFF extra spend of $"+Math.round(0.25*pb24).toLocaleString()+"\u2013$"+Math.round(0.50*pb24).toLocaleString()+" from TAXABLE is pre-authorised \u2014 a gift, a trip, a generosity. 50% is the measured optimum. Take it or leave it; no analysis owed. A trigger that clears is PERMISSION, never instruction \u2014 in a visibly bad decade the answer is no regardless of what the arithmetic permits.");
+  } else { out.prosp_lo = 0; out.prosp_hi = 0; }
+  if(p.nc_rate!==null && p.nc_rate!==undefined){
+    /* FIX 5: NC has a standard deduction, and NC taxes her W-2 wages. */
+    var nc_sd = (p.nc_sd===null||p.nc_sd===undefined) ? NC_SD[p.status] : p.nc_sd;
+    var nc_base = hers_draw + rmd_ira + ordi + p.qdiv + gain + p.fers + wages;
+    var nc_ti = Math.max(0, nc_base - nc_sd);
+    out.nc_sd = nc_sd;
+    out.nc = [nc_base, nc_ti*p.nc_rate/100, his_draw*p.nc_rate/100, nc_ti];
+    if(his_draw>0){
+      out.notes.push("NC A12: $"+Math.round(his_draw).toLocaleString()+" drawn from HIS TSP is deducted, saving $"+Math.round(his_draw*p.nc_rate/100).toLocaleString()+". It is NOT automatic — the preparer must claim it on D-400 Schedule S. Re-verify the FAQ annually until the §105-264(b) Private Letter Ruling arrives; then the ruling in the binder controls.");
+    }
+  }
+  return out;
+}
+
+function selfTestCruise(){
+  /* Mirrors cruise_calculator.py::_self_test exactly. I is the Python INPUTS dict. */
+  var I = {status:"mfj", year_figs:null, rate:6.5, lid:false, myage:62, heragey:null,
+    sd_extra:0, his_tsp:1880000, her_tsp:1940000, his_tsp_py:null, her_tsp_py:null,
+    taxable:2650000, roth:1800000, ira:100000,
+    pen:79000, va:0, fers:29000, wages:0, ss:0, ord_inc:22000, qdiv:37000, iraRMD:0,
+    nc_rate:3.99, nc_sd:null, prosp_mult:30,
+    need:35000, lifestyle:105000, gainfrac:25, wover:null, whpen:6000, estpay:0, prioryr:null,
+    adj:0, ordinv:null, exempt:0, taxadj:0};
+  function C(o){ var q={}; for(var k in I) q[k]=I[k]; for(var k2 in o) q[k2]=o[k2]; return computeCruise(q); }
+  var ok = true, msg = [];
+  function chk(name, cond){ if(!cond){ ok=false; msg.push(name); } }
+  var near = function(a,b){ return Math.abs(a-b) < 0.01; };
+
+  var A = C({lid:false, rate:5.5});
+  chk("A", Math.round(A.W_rule)===210100 && Math.round(A.his_draw)===210100 && A.hers_draw===0);
+  var B = C({lid:true, rate:5.5, pen:200000, ss:60000});
+  chk("B", Math.round(B.W_rule)===153750 && Math.round(B.room)===153750);
+  var Cc = C({his_tsp:50000, lid:false, rate:5.5});
+  chk("C", Math.round(Cc.his_draw)===50000 && Math.round(Cc.hers_draw)===Math.round(0.055*1990000)-50000 &&
+           near(Cc.nc[2], 50000*0.0399) &&
+           Math.round(Cc.nc[0])===Math.round(Cc.hers_draw+22000+37000+29000));
+  var D = C({myage:76, heragey:76, lid:false, rate:1.0});
+  chk("D", near(D.rmd_his, 1880000/23.7) && near(D.rmd_hers, 1940000/23.7) &&
+           D.forced>0 && near(D.W_rule, D.rmd_his+D.rmd_hers) &&
+           D.floor_pct===0 && near(D.rmd_in_draw, D.W_rule));
+  var D2 = C({myage:76, heragey:76, lid:false, rate:9.0});
+  chk("D2", D2.hers_draw===D2.rmd_hers && D2.rmd_hers>0 && D2.forced===D2.rmd_hers &&
+            Math.abs(D2.floor_pct - 20*(1-D2.rmd_in_draw/D2.W))<0.01);
+  var D3 = C({myage:70, heragey:70, lid:false, rate:9.0});
+  chk("D3", D3.hers_draw===0 && D3.forced===0);
+  var E = C({myage:52, wages:154000, rate:5.5});
+  chk("E", E.bridge && E.dormant && E.W_rule===0);
+  var F = C({myage:52, wages:0, rate:5.5, pen:50000, ss:0, ord_inc:10000, qdiv:0});
+  chk("F", Math.round(F.sale)===145750 && Math.round(F.bridge_gain)===36438 &&
+           Math.round(F.at0)===Math.round(F.bridge_gain) && F.ord_all===60000);
+  var P1 = C({prosp_mult:20, rate:5.5, taxable:9000000});
+  chk("P1", P1.prosp_hi===0.50*403550 && P1.prosp_trigger===20*403550);
+  var P2 = C({prosp_mult:30, rate:5.5});
+  chk("P2", P2.prosp_hi===0);
+  var G = C({status:"single", rate:5.5, pen:50000});
+  chk("G", Math.round(G.room)===145875);
+  var H = C({lid:false, pen:50000, ss:0, ord_inc:10000, qdiv:14000, his_tsp:5000000,
+             her_tsp:0, rate:100*193600/5000000, taxable:8000000, roth:0, ira:0, whpen:6000});
+  chk("H", Math.round(H.W)===193600 && H.elect===20);
+
+  /* ---- regression battery for the 24 Aug fixes ---- */
+  var okR1 = true, ages=[76,80];
+  for(var i=0;i<ages.length;i++){
+    var R = C({myage:ages[i], heragey:ages[i], lid:true, rate:6.5, pen:149000, ss:69800,
+               his_tsp_py:1880000, her_tsp_py:1940000});
+    if(!(R.W <= R.room+0.01 && R.over_ceiling <= 0.01 && near(R.hers_draw, R.rmd_hers) && R.forced===0)) okR1=false;
+  }
+  chk("R1-lid-holds", okR1);
+  var Ra = C({myage:88, heragey:88, lid:true, rate:6.5, pen:149000, ss:69800,
+              his_tsp_py:1880000, her_tsp_py:1940000});
+  chk("R1a-rmds-exceed-cap", near(Ra.W, Ra.rmd_his+Ra.rmd_hers) && Ra.W>Ra.room && Ra.over_ceiling>0);
+  var Rb = C({myage:80, heragey:80, lid:false, rate:6.5, his_tsp_py:1880000, her_tsp_py:1940000});
+  chk("R1b-lid-off-unchanged", near(Rb.forced, Rb.rmd_hers));
+  var Rc = C({myage:88, heragey:88, lid:true, rate:6.5, pen:380000, ss:69800});
+  chk("R1c-unavoidable", Rc.W>Rc.room && Rc.over_ceiling>0 && near(Rc.W, Rc.rmd_his+Rc.rmd_hers));
+
+  var R2 = C({myage:76, heragey:76, lid:true, rate:6.5, iraRMD:40000,
+              his_tsp_py:1880000, her_tsp_py:1940000});
+  chk("R2-room-nets-iraRMD", R2.over_ceiling <= 0.01);
+  var R2b = C({myage:76, lid:false, rate:6.5, iraRMD:40000, adj:5000});
+  chk("R2b-room-formula", Math.round(R2b.room)===Math.round(403550+R2b.sd_eff-79000-22000-40000+5000));
+
+  var S0=C({myage:62, heragey:61}), S1=C({myage:66, heragey:61}),
+      S2=C({myage:66, heragey:65}), S3=C({myage:66, heragey:65, sd_extra:1}),
+      SS=C({status:"single", myage:66});
+  chk("R3-sd65", S0.sd_eff===32200 && S1.sd_eff===33850 && S2.sd_eff===35500 &&
+                 S3.sd_eff===37150 && SS.sd_eff===18150 && (S2.room-S0.room)===3300);
+
+  var W0=C({myage:62}), W1=C({myage:62, wages:154000});
+  chk("R4-wages", (W1.ord_all-W0.ord_all)===154000 && (W0.room-W1.room)===154000 &&
+                  (W1.nc[0]-W0.nc[0])===154000);
+  var Ed = C({myage:52, rate:5.5, wages:40000, pen:0, need:35000});
+  var En = C({myage:52, rate:5.5, wages:20000, pen:0, need:35000});
+  chk("R4b-dormancy", Ed.dormant && Ed.ord_all===62000 && !En.dormant);
+
+  var N = C({myage:62, lid:false});
+  var Nsm = C({myage:62, ord_inc:0, qdiv:0, fers:0, wages:0});
+  chk("R5-nc-sd", N.nc_sd===25500 && near(N.nc[3], N.nc[0]-25500) &&
+                  near(N.nc[1], N.nc[3]*0.0399) && Nsm.nc[1]===0);
+
+  chk("R6-ult-guard", ultDiv(72)===null && ultDiv(76)===23.7);
+
+  var PY = C({myage:76, heragey:76, lid:false, rate:1.0, his_tsp_py:1500000, her_tsp_py:1600000});
+  chk("R7-prior-year-balance", near(PY.rmd_his, 1500000/23.7) && near(PY.rmd_hers, 1600000/23.7));
+  var PYc = C({myage:88, heragey:88, lid:false, rate:1.0, his_tsp:40000,
+               his_tsp_py:1880000, her_tsp_py:1940000});
+  chk("R7b-rmd-capped-at-balance", PYc.rmd_his===40000);
+
+  chk("R8-prosp-default-30", I.prosp_mult===30);
+
+  var C99 = C({myage:62, rate:0.2, lid:false, pen:600000, whpen:0});
+  var bad100 = false;
+  for(var j=0;j<C99.warnings.length;j++){ if(C99.warnings[j].indexOf("elect 100%")>=0) bad100=true; }
+  chk("R9-no-101-percent", !bad100);
+
+  /* R10 (fix 10) — VA counts for the NEEDS tests and NOWHERE else */
+  var V0 = C({myage:52, rate:5.5, wages:20000, pen:0, va:0,     need:35000});
+  var V1 = C({myage:52, rate:5.5, wages:20000, pen:0, va:32451, need:35000});
+  chk("R10-va-covers-need", !V0.dormant && V1.dormant && V1.W_rule===0);
+  var T0 = C({myage:62, rate:6.5, va:0});
+  var T1 = C({myage:62, rate:6.5, va:32451});
+  var taxfree = true, kk = ["ord_all","liability","irmaa_magi","room","W","tax_ord","tax_cg","niit"];
+  for(var q=0;q<kk.length;q++){ if(Math.abs(T0[kk[q]]-T1[kk[q]])>0.01) taxfree=false; }
+  if(Math.abs(T0.nc[0]-T1.nc[0])>0.01 || Math.abs(T0.nc[1]-T1.nc[1])>0.01) taxfree=false;
+  if(Math.abs(T1.guaranteed-(79000+32451))>0.01) taxfree=false;
+  chk("R10b-va-is-tax-free", taxfree);
+
+  /* R11 (fix 11) — the needs note is no longer unconditional once pen > need */
+  function has(o,s){ for(var q=0;q<o.notes.length;q++){ if(o.notes[q].indexOf(s)>=0) return true; } return false; }
+  var COVER="GUARANTEED INCOME ALREADY COVERS THE NEED", FARMORE="far more than the stated need";
+  var U1 = C({myage:52, rate:5.5, wages:0, pen:10000, va:0, need:35000});
+  var U2 = C({myage:52, rate:5.5, wages:0, pen:52868, va:0, need:35000});
+  var U3 = C({myage:52, rate:5.5, wages:0, pen:10000, va:32451, need:35000});
+  var U4 = C({myage:52, rate:0.05, wages:0, pen:0, va:0, need:35000, taxable:1000000});
+  chk("R11-needs-guard-not-degenerate",
+      has(U1,FARMORE) && !has(U1,COVER) &&
+      has(U2,COVER)   && !has(U2,FARMORE) &&
+      has(U3,COVER)   && !has(U4,FARMORE));
+
+  return {ok:ok, failed:msg};
+}
+/* ==== END PURE ENGINE ==== */
+
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var jsw = $("jswarn"); if(jsw) jsw.style.display = "none";
+  var money = function(x){ return "$" + Math.round(x).toLocaleString(); };
+  var num = function(id, dflt){
+    var el = $(id); if(!el) return dflt;
+    var v = (el.value||"").toString().replace(/[$,\s]/g,"");
+    if(v==="") return dflt;
+    var n = parseFloat(v); return isNaN(n) ? dflt : n;
+  };
+  var IDS = ["t10","t12","b22","b24","t32","t35","sd","sd65","cg0","cg15"];
+  function loadFigs(){
+    // Overwrites every figure in the bracket table. If the user has typed a LATER
+    // year's numbers over the top, say so before destroying them.
+    var f = FIGURES[$("status").value], dirty = false;
+    for(var i=0;i<IDS.length;i++){
+      var cur = ($(IDS[i]).value||"").toString().replace(/[$,\s]/g,"");
+      if(cur!=="" && parseFloat(cur)!==FIGURES.mfj[IDS[i]] && parseFloat(cur)!==FIGURES.single[IDS[i]]) dirty = true;
+    }
+    if(dirty && !window.confirm("The bracket table contains figures that are not the published 2026 values \u2014 probably a later year you typed in. Loading the 2026 figures will overwrite them. Continue?")) return;
+    for(var j=0;j<IDS.length;j++){ $(IDS[j]).value = f[IDS[j]]; }
+    if($("nc_sd")) $("nc_sd").value = NC_SD[$("status").value];
+  }
+  $("loadbtn").addEventListener("click", loadFigs);
+  $("status").addEventListener("change", loadFigs);
+
+  function gather(){
+    var st = $("status").value, f = FIGURES[st], yf = {};
+    for(var i=0;i<IDS.length;i++){ yf[IDS[i]] = num(IDS[i], f[IDS[i]]); }
+    var her  = $("heragey").value.trim()===""? null : num("heragey", null);
+    var hpy  = $("his_tsp_py").value.trim()===""? null : num("his_tsp_py", null);
+    var wpy  = $("her_tsp_py").value.trim()===""? null : num("her_tsp_py", null);
+    var ncsd = $("nc_sd").value.trim()===""? null : num("nc_sd", null);
+    var wov = $("wover").value.trim()===""? null : num("wover", null);
+    var pri = $("prioryr").value.trim()===""? null : num("prioryr", null);
+    var oiv = $("ordinv").value.trim()===""? null : num("ordinv", null);
+    return {status:st, year_figs:yf, rate:num("rate",6.5), lid:$("lid").value==="1",
+      myage:num("myage",62), heragey:her, sd_extra:num("sd_extra",0),
+      his_tsp:num("his_tsp",0), her_tsp:num("her_tsp",0),
+      his_tsp_py:hpy, her_tsp_py:wpy, taxable:num("taxable",0),
+      roth:num("roth",0), ira:num("ira",0),
+      pen:num("pen",0), fers:num("fers",0), wages:num("wages",0), ss:num("ss",0), ord_inc:num("ord",0),
+      qdiv:num("qdiv",0), iraRMD:num("iraRMD",0), nc_rate:num("nc",3.99), nc_sd:ncsd,
+      prosp_mult:num("prosp",30),
+      need:num("need",35000), lifestyle:num("lifestyle",105000), gainfrac:num("gainfrac",25),
+      wover:wov, whpen:num("whpen",0), estpay:num("estpay",0), prioryr:pri,
+      adj:num("adj",0), ordinv:oiv, exempt:num("exempt",0), taxadj:num("taxadj",0)};
+  }
+
+  function render(){
+    var p = gather(), r = computeCruise(p);
+    // FIX 6: below 75 the Uniform Lifetime Table has no entry — say so, do not print undefined.
+    var divLabel = function(a){ var d = ultDiv(a); return d===null ? "(no RMD yet)" : "÷" + d; };
+    var mb = $("mathbox"), wb = $("warnings"), tb = $("tierbar"),
+        ab = $("amountbox"), sb = $("splitbox"), nb = $("notesbox");
+
+    if(r.bridge){
+      mb.innerHTML =
+        "<b>Phase:</b> before 59½ — the TSP and IRAs are out of reach, so the taxable account is the only source.<br>" +
+        "<b>Rule:</b> " + p.rate + "% × taxable " + money(p.taxable) + " = <b>" + money(p.rate/100*p.taxable) + "</b><br>" +
+        "<b>Dormancy test:</b> wages " + money(p.wages) + " + pension " + money(p.pen) +
+        (p.va ? " + VA " + money(p.va) : "") +
+        (r.dormant ? " ≥ floor " + money(p.need) + " → <b>DORMANT, draw nothing</b>" : " &lt; floor " + money(p.need) + " → the clause is live") +
+        (r.W_rule>0 ? "<br><b>Realized gain:</b> " + money(r.sale) + " × " + p.gainfrac + "% = " + money(r.bridge_gain) +
+          " · absorbed at 0% capital gains: " + money(r.at0) : "");
+    } else {
+      mb.innerHTML =
+        "<b>Rule:</b> " + p.rate + "% × combined TSP " + money(r.tsp) + " = <b>" + money(r.target_raw) + "</b><br>" +
+        "<b>24% room:</b> " + money(p.year_figs.b24) + " + standard deduction " + money(r.sd_eff) +
+        (r.sd_count ? " (base " + money(r.sd_base) + " + " + r.sd_count + " age-65/blind add-on" + (r.sd_count>1?"s":"") + ")" : "") +
+        " − pensions " + money(p.pen) +
+        (p.wages ? " − wages " + money(p.wages) : "") +
+        " − taxable SS " + money(p.ss) + " − ordinary investment income " + money(p.ord_inc) +
+        (r.rmd_ira ? " − IRA RMD " + money(r.rmd_ira) : "") +
+        (p.adj ? " + adjustments " + money(p.adj) : "") +
+        " = <b>" + money(r.room) + "</b><br>" +
+        "<b>Lid:</b> " + (p.lid ? (r.room < r.target_raw ? "ON and <b>BINDING</b> — draw capped at the room" : "ON, not binding this year") : "<b>OFF</b> — bracket-blind") + "<br>" +
+        "<b>Sourcing:</b> his TSP " + money(p.his_tsp) + " first, then hers " + money(p.her_tsp) +
+        ((p.myage>=75 || r.herage>=75) ? "<br><b>RMDs (per-plan):</b> his " + money(r.rmd_his) + " " + divLabel(p.myage) +
+          " · hers " + money(r.rmd_hers) + " " + divLabel(r.herage) + " · IRA net of QCDs " + money(r.rmd_ira) : "");
+    }
+
+    wb.innerHTML = r.warnings.map(function(w){ return '<div class="warn">! ' + w + '</div>'; }).join("");
+
+    var cls = r.bridge ? (r.dormant ? "dormant" : "bridge") : (p.myage>=75 ? "rmd" : "draw");
+    tb.className = "tier " + cls;
+    tb.textContent = r.dormant ? "BRIDGE — DORMANT (draw nothing this year)" : r.phase.toUpperCase();
+
+    ab.innerHTML = (r.bridge ? "Sell from the taxable account this year:" : "Withdraw from TSP this December:") +
+      '<span class="big">' + money(r.W) + '</span>' +
+      (p.wover!==null ? '<span class="hint">Rule amount ' + money(r.W_rule) + ', overridden — label this a deliberate exception in this year\'s notes.</span>' : '');
+
+    sb.innerHTML = r.bridge ? "" :
+      '<div class="split"><div><span class="lab">FROM HIS TSP (NC-deductible)</span>' + money(r.his_draw) +
+      '</div><div><span class="lab">FROM HER TSP (never deductible)</span>' + money(r.hers_draw) + '</div></div>' +
+      (r.forced>0 ? '<div class="split"><div><span class="lab">RMD-FORCED EXCESS — REINVEST, do not spend</span>' + money(r.forced) +
+        '</div><div><span class="lab">RMD PORTION OF THE DRAW (no 20% floor)</span>' + money(r.rmd_in_draw) + '</div></div>' : '');
+
+    nb.innerHTML = r.notes.map(function(n){ return "<li>" + n + "</li>"; }).join("");
+
+    var wm = $("whmath"), ww = $("whwarnings"), wbar = $("whbar"), wa = $("whamount"), wn = $("whnotes");
+    wm.innerHTML =
+      "<b>Ordinary income:</b> " + money(r.ord_all) + " · <b>AGI</b> " + money(r.agi) +
+      " · <b>taxable</b> " + money(r.taxable_inc) + " (ordinary " + money(r.ord_ti) + " / preferential " + money(r.qd_ti) + ")<br>" +
+      "<b>Ordinary tax</b> " + money(r.tax_ord) + " (top dollar " + Math.round(100*r.marginal) + "%) · " +
+      "<b>gains tax</b> " + money(r.tax_cg) + " (0%: " + money(r.at0) + " · 15%: " + money(r.at15) + " · 20%: " + money(r.at20) + ") · " +
+      "<b>NIIT</b> " + money(r.niit) + "<br>" +
+      "<b>Total federal liability</b> " + money(r.liability) + " − already paid " + money(r.paid) +
+      " = <b>still to collect " + money(r.owed) + "</b><br>" +
+      "<b>vs the 24% top:</b> " + (r.over_ceiling>0 ? "<b style='color:#C00000'>OVER by " + money(r.over_ceiling) + "</b>" : money(-r.over_ceiling) + " below (inside the band)") +
+      " · <b>IRMAA MAGI</b> ~" + money(r.irmaa_magi) +
+      (r.arva ? " · <b>ARVA gauge</b> ~" + money(r.arva) : "") +
+      "<br><b>Prosperity:</b> portfolio " + money(r.comb) + " vs " + p.prosp_mult + "× trigger " + money(r.prosp_trigger) +
+      (r.prosp_hi ? " → <b style='color:#2E75B6'>CLEARED — one-off " + money(r.prosp_lo) + "–" + money(r.prosp_hi) + " from taxable</b>" : " → quiet");
+
+    ww.innerHTML = "";
+    wbar.className = "tier " + (r.bridge ? "bridge" : "draw");
+    wbar.textContent = r.bridge ? "BRIDGE YEAR — NO TSP WITHHOLDING ELECTION" : "DECEMBER FEDERAL WITHHOLDING ELECTION";
+
+    if(r.bridge){
+      wa.innerHTML = "Taxable-account sales carry no withholding." +
+        '<span class="big">' + (r.liability>r.paid ? money(r.liability-r.paid) + " to cover" : "covered") + '</span>' +
+        '<span class="hint">Cover it with a Q4 estimated payment or by raising DFAS withholding — there is no 1099-R and no election to make at TSP.</span>';
+    } else {
+      wa.innerHTML = "Elect this percentage on the tsp.gov withdrawal form:" +
+        '<span class="big">' + r.elect + '%</span>' +
+        "Raw requirement " + r.raw_pct.toFixed(1) + "% · mandatory 20% floor on the non-RMD slice = " + r.floor_pct.toFixed(1) + "%<br>" +
+        "Withholds " + money(r.withheld) + " · projected " +
+        (r.settle>=0 ? "<b>refund " + money(r.settle) + "</b>" : "<b style='color:#C00000'>balance due " + money(-r.settle) + "</b>") + " at filing" +
+        (r.safe_harbor ? "<br>Safe harbor: payments of " + money(r.safe_harbor[0]) + " avoid all penalty (~" + Math.round(r.safe_harbor[1]) + "% election)" : "");
+    }
+
+    var ncnotes = [];
+    if(r.nc){
+      ncnotes.push("<b>North Carolina, due January 15:</b> base " + money(r.nc[0]) + " − NC standard deduction " + money(r.nc_sd) +
+        " = " + money(r.nc[3]) + ", × " + p.nc_rate + "% = <b>" + money(r.nc[1]) + "</b>. " +
+        "Base = her TSP draw + non-QCD IRA RMD + interest + all dividends and gains" + (p.wages>0 ? " + her W-2 wages" : "") + (p.fers>0 ? " + her FERS (no OPM withholding elected)" : "") +
+        ". Excluded: military pension and SBP (G.S. 105-153.5(b)(5a), or Bailey under (b)(5)), Social Security, Roth, and his TSP draw.");
+      ncnotes.push("<b>A12 deduction on his TSP draw saved " + money(r.nc[2]) + " this year.</b> Claim it on D-400 Schedule S — it is not automatic.");
+    }
+    wn.innerHTML = ncnotes.map(function(n){ return "<li>" + n + "</li>"; }).join("");
+  }
+
+  $("calcbtn").addEventListener("click", render);
+
+  // LIVE RECALC: every field recomputes on edit, so a changed number can never
+  // sit on screen next to a stale result. (The rate lives in STEP 1, above the
+  // button, and read as a setting rather than an input -- it was the field most
+  // likely to be edited without pressing CALCULATE.)
+  Array.prototype.forEach.call(document.querySelectorAll("input, select"), function(el){
+    el.addEventListener("input", render);
+    el.addEventListener("change", render);
+  });
+
+  var st = selfTestCruise();
+  if(!st.ok){
+    var d = document.createElement("div");
+    d.className = "warn";
+    d.innerHTML = "SELF-TEST FAILED (" + st.failed.join(", ") + ") — this tool is not trustworthy in this state. Do not use it. Fall back to cruise_calculator.py or the Addendum's worked tables.";
+    document.querySelector(".sheet").insertBefore(d, document.querySelector("h1").nextSibling);
+    $("calcbtn").disabled = true;
+  }
+  loadFigs();
+  ["rate","prosp","myage","his_tsp","her_tsp","taxable","roth","ira","pen","fers","wages","ss","ord","qdiv","nc","nc_sd","sd_extra","need","lifestyle","gainfrac"]
+    .forEach(function(id, i){
+      var dflt = {rate:6.5, prosp:30, myage:62, his_tsp:1880000, her_tsp:1940000, taxable:2650000,
+                  roth:1800000, ira:100000, pen:79000, fers:29000, wages:0, ss:0, ord:22000,
+                  qdiv:37000, nc:3.99, nc_sd:25500, sd_extra:0, need:35000, lifestyle:105000, gainfrac:25}[id];
+      if($(id) && $(id).value==="") $(id).value = dflt;
+    });
+  render();
+})();
+</script>
+<script>
+/* App shell only. Registration failures are silent by design: opened as a bare
+   file:// the calculator must still work exactly as before, just without offline. */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js').catch(function(){});
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "Cruise Control Calculator — Retirement Income & Legacy Plan",
+  "short_name": "Cruise 6.5%",
+  "description": "The 6.5% withdrawal rule, per-plan RMDs, NC FAQ A12, IRMAA and the prosperity trigger. Offline. Same engine as cruise_calculator.py — parity_check.py is the proof.",
+  "start_url": "./Cruise_Control_Calculator.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FDFDFB",
+  "theme_color": "#1F4E79",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
